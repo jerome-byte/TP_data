@@ -32,6 +32,8 @@ Le notebook teste aussi la robustesse des résultats : impact du retrait des cli
 4. Une graine aléatoire est fixée (`GRAINE = 42`) pour que les résultats soient les mêmes à chaque exécution.
 5. À la fin, le notebook génère automatiquement deux fichiers : `clients_segmentes.csv` (chaque client avec son cluster) et `tableau_segments.csv` (le tableau de synthèse par segment).
 
+le lien pour le tableau de bord :https://dashbord-segmentation.onrender.com/
+
 
 ## Mise en production : l'API de segmentation
 
