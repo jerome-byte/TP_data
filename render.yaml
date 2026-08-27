@@ -1,0 +1,15 @@
+# Configuration de deploiement Render (https://render.com)
+# Le modele entraine (modele/modele_rfm.joblib) est versionne dans le depot :
+# aucun entrainement n'a lieu au demarrage, l'API charge simplement les objets.
+services:
+  - type: web
+    name: segmentation-rfm
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /sante
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.2"

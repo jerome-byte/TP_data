@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+online_retail_II.xlsx
+*.ipynb
+.ipynb_checkpoints/
+.git/
