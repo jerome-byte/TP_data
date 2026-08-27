@@ -1,6 +1,9 @@
 # TP 2 (F1) Segmentation clients RFM
 
 « Comprendre ses clients pour mieux les servir » — TAISS 2026
+le lien important 
+https://dashbord-segmentation.onrender.com/  pour tableau de bord
+https://tp-data-p5p3.onrender.com/   pour test notre modele avec des jeu de donnees
 
 ## Le contexte
 
