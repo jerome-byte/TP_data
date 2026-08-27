@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segmentation clients RFM</title>
+<style>
+:root{
+  --fond:#f7f8fa; --carte:#fff; --texte:#1f2328; --doux:#656d76;
+  --bord:#d8dde3; --bleu:#2563eb;
+  --c1:#2563eb; --c2:#059669; --c3:#d97706; --c4:#94a3b8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5}
+
+header{background:var(--carte);border-bottom:1px solid var(--bord);padding:16px 24px;
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{margin:0;font-size:17px;font-weight:600}
+header .info{font-size:13px;color:var(--doux)}
+
+nav{background:var(--carte);border-bottom:1px solid var(--bord);padding:0 24px;display:flex;gap:24px}
+nav button{background:none;border:none;padding:11px 0;cursor:pointer;font-size:14px;
+  font-family:inherit;color:var(--doux);border-bottom:2px solid transparent}
+nav button:hover{color:var(--texte)}
+nav button.actif{color:var(--bleu);border-bottom-color:var(--bleu);font-weight:500}
+nav button:focus-visible{outline:2px solid var(--bleu);outline-offset:-2px}
+
+main{max-width:1000px;margin:0 auto;padding:24px}
+.carte{background:var(--carte);border:1px solid var(--bord);border-radius:8px;
+  padding:20px;margin-bottom:16px}
+.carte h2{margin:0 0 16px;font-size:14px;font-weight:600}
+
+.champs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+label{display:block;font-size:13px;color:var(--doux);margin-bottom:5px}
+input[type=number],input[type=text]{width:100%;padding:8px 10px;border:1px solid var(--bord);
+  border-radius:6px;font-size:14px;font-family:inherit;background:var(--carte);color:var(--texte)}
+input:focus{outline:none;border-color:var(--bleu);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+
+.actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--bleu);color:#fff;border:1px solid var(--bleu);padding:8px 16px;
+  border-radius:6px;font-size:14px;font-family:inherit;cursor:pointer}
+.btn:hover{background:#1d4ed8}
+.btn:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+.btn.gris{background:var(--carte);color:var(--texte);border-color:var(--bord)}
+.btn.gris:hover{background:#f2f4f7}
+
+.reponse{display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--bord)}
+.reponse.vu{display:grid;grid-template-columns:1fr 260px;gap:24px;align-items:center}
+@media(max-width:760px){.reponse.vu{grid-template-columns:1fr}}
+.graphe svg{display:block;width:100%;height:auto}
+.verdict .nom{font-size:22px;font-weight:600;margin-bottom:6px}
+.verdict .txt{font-size:14px;color:var(--texte);margin:0}
+.verdict .det{margin-top:14px;padding-top:12px;border-top:1px solid var(--bord);
+  font-size:13px;color:var(--doux)}
+
+.depot{border:1px dashed var(--bord);border-radius:8px;padding:32px;text-align:center;
+  cursor:pointer;background:var(--carte)}
+.depot:hover,.depot.survol{border-color:var(--bleu);background:#f5f8ff}
+.depot:focus-visible{outline:2px solid var(--bleu);outline-offset:2px}
+.depot strong{display:block;font-size:15px;margin-bottom:6px}
+.depot p{margin:3px 0;font-size:13px;color:var(--doux)}
+code{background:#eef1f4;padding:1px 5px;border-radius:4px;font-size:12.5px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:16px}
+.stat{background:var(--carte);border:1px solid var(--bord);border-radius:8px;padding:16px}
+.stat .n{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat .l{font-size:13px;color:var(--doux);margin-top:2px}
+
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.deux{grid-template-columns:1fr}}
+.ligne{display:grid;grid-template-columns:110px 1fr 92px;align-items:center;gap:10px;
+  padding:7px 0;font-size:13px}
+.ligne .nm{color:var(--doux)}
+.ligne .piste{height:16px;background:#eef1f4;border-radius:3px}
+.ligne .plein{height:100%;border-radius:3px;transition:width .4s}
+.ligne .vl{text-align:right;font-variant-numeric:tabular-nums}
+.ligne .vl small{color:var(--doux)}
+
+.boite{max-height:420px;overflow:auto;border:1px solid var(--bord);border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{position:sticky;top:0;background:#f2f4f7;padding:9px 12px;text-align:left;
+  font-size:12.5px;font-weight:600;color:var(--doux);cursor:pointer;white-space:nowrap;
+  border-bottom:1px solid var(--bord)}
+th:hover{color:var(--texte)}
+td{padding:8px 12px;border-bottom:1px solid #eef1f4;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+.num{text-align:right}
+.pastille{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px}
+
+.seg{padding:12px 0;border-bottom:1px solid var(--bord)}
+.seg:last-child{border-bottom:none}
+.seg h3{margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.seg p{margin:5px 0 0;font-size:14px;color:var(--doux)}
+
+.err{display:none;margin-top:14px;padding:10px 12px;border-radius:6px;
+  background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;font-size:13.5px}
+.note{font-size:13px;color:var(--doux);margin-top:12px}
+.cache{display:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Segmentation clients RFM</h1>
+  <div class="info" id="info">chargement…</div>
+</header>
+
+<nav>
+  <button class="actif" data-vue="un">Un client</button>
+  <button data-vue="lot">Fichier CSV</button>
+  <button data-vue="seg">Segments</button>
+</nav>
+
+<main>
+
+<section id="vue-un">
+  <div class="carte">
+    <h2>Prédire le segment d'un client</h2>
+    <div class="champs">
+      <div><label for="cid">Identifiant (optionnel)</label>
+        <input type="text" id="cid" placeholder="12347"></div>
+      <div><label for="rec">Récence (jours)</label>
+        <input type="number" id="rec" value="30" min="0" step="1"></div>
+      <div><label for="freq">Fréquence (factures)</label>
+        <input type="number" id="freq" value="5" min="0" step="1"></div>
+      <div><label for="mont">Montant total (£)</label>
+        <input type="number" id="mont" value="1500" min="0" step="0.01"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="go">Prédire</button>
+      <button class="btn gris" data-ex="16,13,4905">Exemple : client actif</button>
+      <button class="btn gris" data-ex="401,1,276">Exemple : client inactif</button>
+    </div>
+    <div class="err" id="err-un"></div>
+
+    <div class="reponse" id="reponse">
+      <div class="graphe" id="graphe"></div>
+      <div class="verdict">
+        <div class="nom" id="v-nom"></div>
+        <p class="txt" id="v-txt"></p>
+        <div class="det" id="v-det"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="vue-lot" class="cache">
+  <div class="carte">
+    <h2>Segmenter un fichier de clients</h2>
+    <div class="depot" id="depot" tabindex="0" role="button" aria-label="Choisir un fichier CSV">
+      <strong id="depot-t">Déposer un fichier CSV ou cliquer</strong>
+      <p>colonnes <code>customer_id, recence, frequence, montant</code></p>
+      <p>ou <code>customer_id, invoice, invoice_date, quantity, price</code></p>
+      <input type="file" id="fichier" accept=".csv" hidden>
+    </div>
+    <div class="note">Le fichier <code>clients_segmentes.csv</code> du notebook fonctionne directement.</div>
+    <div class="err" id="err-lot"></div>
+  </div>
+
+  <div id="res" class="cache">
+    <div class="stats" id="stats"></div>
+    <div class="deux">
+      <div class="carte"><h2>Clients par segment</h2><div id="g1"></div></div>
+      <div class="carte"><h2>Chiffre d'affaires par segment</h2><div id="g2"></div></div>
+    </div>
+    <div class="carte">
+      <h2>Détail <span id="cpt" style="font-weight:400;color:var(--doux)"></span></h2>
+      <div class="boite"><table id="tbl">
+        <thead><tr>
+          <th data-tri="customer_id">Client</th>
+          <th class="num" data-tri="recence">Récence</th>
+          <th class="num" data-tri="frequence">Fréq.</th>
+          <th class="num" data-tri="montant">Montant</th>
+          <th data-tri="segment">Segment</th>
+        </tr></thead><tbody></tbody>
+      </table></div>
+      <div class="actions"><button class="btn" id="exp">Télécharger le CSV</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="vue-seg" class="cache">
+  <div class="carte">
+    <h2>Les quatre segments</h2>
+    <div id="liste"></div>
+    <div class="note" id="note"></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+"use strict";
+const C={"Champions":"var(--c1)","Clients réguliers":"var(--c2)",
+         "Clients à risque":"var(--c3)","Clients endormis":"var(--c4)"};
+const HEX={"Champions":"#2563eb","Clients réguliers":"#059669",
+           "Clients à risque":"#d97706","Clients endormis":"#94a3b8"};
+const ORDRE=["Champions","Clients réguliers","Clients à risque","Clients endormis"];
+const $=s=>document.querySelector(s);
+const nb=n=>n.toLocaleString("fr-FR",{maximumFractionDigits:0});
+const gbp=n=>"£"+n.toLocaleString("fr-FR",{maximumFractionDigits:0});
+let preds=[], nuage=[], col=null, asc=true;
+
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("actif"));
+  b.classList.add("actif");
+  ["un","lot","seg"].forEach(v=>$("#vue-"+v).classList.toggle("cache",v!==b.dataset.vue));
+});
+
+function err(id,m){const e=$(id);if(!m){e.style.display="none";return;}e.textContent=m;e.style.display="block";}
+
+fetch("/sante").then(r=>r.json()).then(d=>{
+  $("#info").textContent=nb(d.clients_entrainement)+" clients de référence · base au "+d.date_reference_modele;
+  $("#note").textContent="Modèle entraîné sur "+nb(d.clients_entrainement)+
+    " clients, base arrêtée au "+d.date_reference_modele+
+    ". La récence doit être comptée à partir de cette date.";
+}).catch(()=>$("#info").textContent="API injoignable");
+
+fetch("/nuage").then(r=>r.json()).then(d=>nuage=d).catch(()=>{});
+
+fetch("/segments").then(r=>r.json()).then(s=>{
+  $("#liste").innerHTML=ORDRE.filter(n=>s.some(x=>x.segment===n)).map(n=>{
+    const x=s.find(y=>y.segment===n);
+    return `<div class="seg"><h3><span class="pastille" style="background:${HEX[n]}"></span>${n}
+      <span style="font-weight:400;color:var(--doux);font-size:13px">cluster ${x.cluster}</span></h3>
+      <p>${x.recommandation}</p></div>`;}).join("");
+});
+
+/* nuage : situe le client parmi la base */
+function tracer(p){
+  const L=44,R=10,H=22,B=30,w=460,h=250,px=w-L-R,py=h-H-B;
+  const fx=v=>L+px*(Math.log10(Math.max(v,1))/Math.log10(760));
+  const fy=v=>H+py-py*(Math.log10(Math.max(v,1))/Math.log10(600000));
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img"
+    aria-label="Position du client : ${nb(p.recence)} jours, ${gbp(p.montant)}, segment ${p.segment}">`;
+  [10,1000,600000].concat([100,10000]).sort((a,b)=>a-b).forEach(v=>{
+    s+=`<line x1="${L}" y1="${fy(v)}" x2="${w-R}" y2="${fy(v)}" stroke="#e8ebef"/>
+      <text x="${L-6}" y="${fy(v)+3}" text-anchor="end" font-size="9" fill="#94a3b8"
+      font-family="system-ui">${v>=1000?(v/1000)+"k":v}</text>`;});
+  [1,10,60,200,760].forEach(v=>{
+    s+=`<text x="${fx(v)}" y="${H+py+13}" text-anchor="middle" font-size="9" fill="#94a3b8"
+      font-family="system-ui">${v}</text>`;});
+  nuage.forEach(c=>{s+=`<circle cx="${fx(c.r).toFixed(1)}" cy="${fy(c.m).toFixed(1)}" r="1.7"
+    fill="${HEX[c.s]}" opacity="${c.s===p.segment?.35:.12}"/>`;});
+  const cx=fx(p.recence),cy=fy(p.montant),t=HEX[p.segment];
+  s+=`<circle cx="${cx}" cy="${cy}" r="5.5" fill="${t}" stroke="#fff" stroke-width="2"/>
+    <text x="${L}" y="${h-6}" font-size="9.5" fill="#656d76" font-family="system-ui">Récence (jours) →</text>
+    <text x="4" y="11" font-size="9.5" fill="#656d76" font-family="system-ui">↑ Montant £</text></svg>`;
+  $("#graphe").innerHTML=s;
+}
+
+document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{
+  const [r,f,m]=b.dataset.ex.split(",");
+  $("#rec").value=r;$("#freq").value=f;$("#mont").value=m;$("#go").click();
+});
+
+$("#go").onclick=async()=>{
+  err("#err-un",null);
+  const c={customer_id:$("#cid").value||null,recence:parseFloat($("#rec").value),
+    frequence:parseFloat($("#freq").value),montant:parseFloat($("#mont").value)};
+  if([c.recence,c.frequence,c.montant].some(v=>isNaN(v)||v<0))
+    return err("#err-un","Renseignez la récence, la fréquence et le montant.");
+  try{
+    const r=await fetch("/predire",{method:"POST",
+      headers:{"Content-Type":"application/json"},body:JSON.stringify([c])});
+    if(!r.ok) throw new Error((await r.json()).detail||r.statusText);
+    const p=(await r.json()).predictions[0];
+    $("#v-nom").textContent=p.segment; $("#v-nom").style.color=HEX[p.segment];
+    $("#v-txt").textContent=p.recommandation;
+    $("#v-det").textContent=(p.customer_id?"Client "+p.customer_id+" · ":"")+
+      "Récence "+nb(p.recence)+" j · Fréquence "+nb(p.frequence)+
+      " · Montant "+gbp(p.montant)+" · cluster "+p.cluster;
+    tracer(p); $("#reponse").classList.add("vu");
+  }catch(e){err("#err-un","Erreur : "+e.message);}
+};
+
+const dp=$("#depot"),fi=$("#fichier");
+dp.onclick=()=>fi.click();
+dp.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click();}};
+dp.ondragover=e=>{e.preventDefault();dp.classList.add("survol");};
+dp.ondragleave=()=>dp.classList.remove("survol");
+dp.ondrop=e=>{e.preventDefault();dp.classList.remove("survol");
+  if(e.dataTransfer.files[0])envoyer(e.dataTransfer.files[0]);};
+fi.onchange=()=>fi.files[0]&&envoyer(fi.files[0]);
+
+async function envoyer(f){
+  err("#err-lot",null); $("#depot-t").textContent="Traitement de "+f.name+"…";
+  const d=new FormData(); d.append("fichier",f);
+  try{
+    const r=await fetch("/predire/fichier",{method:"POST",body:d});
+    if(!r.ok) throw new Error((await r.json()).detail||r.statusText);
+    preds=(await r.json()).predictions; afficher();
+    $("#depot-t").textContent=f.name+" — "+nb(preds.length)+" clients";
+  }catch(e){err("#err-lot","Erreur : "+e.message);
+    $("#depot-t").textContent="Déposer un fichier CSV ou cliquer";}
+}
+
+function afficher(){
+  $("#res").classList.remove("cache");
+  const ca=preds.reduce((s,p)=>s+p.montant,0), par={};
+  preds.forEach(p=>{(par[p.segment]=par[p.segment]||{n:0,ca:0});par[p.segment].n++;par[p.segment].ca+=p.montant;});
+  const vus=ORDRE.filter(s=>par[s]), ch=par["Champions"];
+  $("#stats").innerHTML=`
+    <div class="stat"><div class="n">${nb(preds.length)}</div><div class="l">clients</div></div>
+    <div class="stat"><div class="n">${gbp(ca)}</div><div class="l">chiffre d'affaires</div></div>
+    <div class="stat"><div class="n">${ch?Math.round(100*ch.ca/ca):0} %</div><div class="l">du CA : Champions</div></div>
+    <div class="stat"><div class="n">${vus.length}</div><div class="l">segments présents</div></div>`;
+  const barres=(k,f)=>{const mx=Math.max(...vus.map(s=>par[s][k])),
+    tt=vus.reduce((a,s)=>a+par[s][k],0);
+    return vus.map(s=>`<div class="ligne"><div class="nm">${s}</div>
+      <div class="piste"><div class="plein" style="width:${100*par[s][k]/mx}%;background:${HEX[s]}"></div></div>
+      <div class="vl">${f(par[s][k])} <small>${Math.round(100*par[s][k]/tt)}%</small></div></div>`).join("");};
+  $("#g1").innerHTML=barres("n",nb); $("#g2").innerHTML=barres("ca",gbp);
+  dessiner();
+}
+
+function dessiner(){
+  let l=[...preds];
+  if(col) l.sort((a,b)=>{const x=a[col],y=b[col];
+    const c=(typeof x==="number")?x-y:String(x).localeCompare(String(y));return asc?c:-c;});
+  $("#cpt").textContent=l.length>500?`— 500 premières sur ${nb(l.length)}, l'export contient tout`:"";
+  $("#tbl tbody").innerHTML=l.slice(0,500).map(p=>`<tr>
+    <td>${p.customer_id??"—"}</td><td class="num">${nb(p.recence)}</td>
+    <td class="num">${nb(p.frequence)}</td><td class="num">${gbp(p.montant)}</td>
+    <td><span class="pastille" style="background:${HEX[p.segment]}"></span>${p.segment}</td></tr>`).join("");
+  document.querySelectorAll("#tbl th").forEach(th=>{
+    th.textContent=th.textContent.replace(/ [↑↓]$/,"");
+    if(th.dataset.tri===col) th.textContent+=asc?" ↑":" ↓";});
+}
+document.querySelectorAll("#tbl th").forEach(th=>th.onclick=()=>{
+  asc=(col===th.dataset.tri)?!asc:true; col=th.dataset.tri; dessiner();});
+
+$("#exp").onclick=()=>{
+  const cs=["customer_id","recence","frequence","montant","cluster","segment","recommandation"];
+  const e=v=>{const s=String(v??"");return /[",;\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const csv=[cs.join(",")].concat(preds.map(p=>cs.map(c=>e(p[c])).join(","))).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}));
+  a.download="clients_segmentes_api.csv"; a.click(); URL.revokeObjectURL(a.href);
+};
+</script>
+</body>
+</html>

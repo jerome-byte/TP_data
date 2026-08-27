@@ -1,0 +1,12 @@
+# Versions figees sur celles reellement testees en local (voir README).
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+python-multipart==0.0.32
+pandas==3.0.5
+numpy==2.4.6
+# scikit-learn doit rester identique a la version ayant entraine le .joblib,
+# sinon le chargement du modele emet un avertissement, voire echoue.
+scikit-learn==1.9.0
+joblib==1.5.3
+# openpyxl ne sert qu'a train_model.py (lecture du .xlsx), pas a l'API.
+openpyxl==3.1.5
