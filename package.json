@@ -33,11 +33,5 @@
     "typescript-eslint": "^8.67.0",
     "vite": "^8.2.2"
   }
-  {
-  "compilerOptions": {
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "skipLibCheck": true
-  }
-}
+  
 }
