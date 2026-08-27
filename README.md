@@ -155,3 +155,69 @@ aujourd'hui. C'est pourquoi `/predire/transactions` accepte une
 `date_reference` explicite. Sur de vraies données d'exploitation, il faut
 réentraîner le modèle périodiquement (`python train_model.py`) pour que les
 frontières entre segments suivent l'évolution de la base clients.
+
+## Déploiement
+
+L'API est déployable en l'état sur Render (offre gratuite). Le principe : le
+modèle entraîné (`modele/modele_rfm.joblib`, 71 Ko) est versionné dans le dépôt,
+donc **aucun entraînement n'a lieu au démarrage** — le serveur charge simplement
+les objets et répond. Le fichier `online_retail_II.xlsx` (44 Mo) n'est pas
+nécessaire en production : il ne sert qu'à `train_model.py`.
+
+### Fichiers de déploiement
+
+- `render.yaml` — la configuration du service (build, démarrage, health check).
+- `requirements.txt` — les versions figées, identiques à celles testées en local.
+- `.dockerignore` — exclut les données lourdes si vous passez par une image.
+
+### Mise en ligne
+
+1. Pousser le dépôt sur GitHub, en vérifiant que `modele/modele_rfm.joblib` est
+   bien inclus (c'est lui qui fait tourner l'API) :
+   ```bash
+   git add api.py train_model.py requirements.txt render.yaml .gitignore \
+           .dockerignore static/ modele/ README.md
+   git commit -m "API de segmentation RFM + interface + déploiement"
+   git push
+   ```
+2. Sur [render.com](https://render.com), *New → Web Service*, connecter le dépôt.
+   Render lit `render.yaml` et pré-remplit la configuration.
+3. Laisser le plan **Free**, puis *Create Web Service*.
+
+L'URL publique est de la forme `https://segmentation-rfm.onrender.com`, avec
+l'interface à la racine et la documentation Swagger sur `/docs`.
+
+### Ce qu'il faut savoir sur l'offre gratuite
+
+Le service **se met en veille au bout de 15 minutes d'inactivité**. La première
+requête après une veille prend alors 30 à 60 secondes, le temps que l'instance
+redémarre : c'est normal, ce n'est pas une panne. Pour une démonstration, il vaut
+mieux ouvrir la page quelques minutes avant de présenter.
+
+La mémoire est limitée à 512 Mo, d'où la borne de 10 Mo sur les fichiers envoyés
+à `/predire/fichier` (au-delà, l'API répond `413` plutôt que de tomber).
+
+### Réentraîner et redéployer
+
+Le modèle est figé au moment de l'entraînement. Pour le rafraîchir :
+
+```bash
+python train_model.py        # régénère modele/modele_rfm.joblib
+git add modele/ && git commit -m "Réentraînement" && git push
+```
+
+Render redéploie automatiquement à chaque push.
+
+### Vérification
+
+Le déploiement a été testé sur un dossier ne contenant que les fichiers
+réellement envoyés (**132 Ko** en tout, sans le `.xlsx` ni le notebook) :
+l'API démarre, charge le modèle, sert l'interface, prédit correctement et
+accepte les uploads. La limite de taille a été vérifiée : un fichier de 14,7 Mo
+est refusé avec un code `413`.
+
+Attention en revanche : `online_retail_II.xlsx` est **déjà présent dans
+l'historique Git**, ce qui fait un dépôt de 44 Mo que Render clonera à chaque
+build. Le déploiement fonctionne, mais si vous voulez alléger, il faut purger
+ce fichier de l'historique (`git filter-repo`) — une opération qui réécrit
+l'historique et doit être décidée en connaissance de cause.

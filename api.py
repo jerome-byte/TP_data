@@ -23,6 +23,11 @@ from pydantic import BaseModel, Field
 CHEMIN_MODELE = Path(__file__).parent / "modele" / "modele_rfm.joblib"
 DOSSIER_STATIC = Path(__file__).parent / "static"
 
+# Taille maximale d'un CSV envoye a /predire/fichier. Le plan gratuit d'un
+# hebergeur dispose de peu de memoire : sans borne, un fichier volumineux
+# ferait tomber le service.
+TAILLE_MAX_CSV = 10 * 1024 * 1024  # 10 Mo
+
 if not CHEMIN_MODELE.exists():
     raise RuntimeError(
         f"Modele introuvable ({CHEMIN_MODELE}). Lancer d'abord : python train_model.py"
@@ -224,6 +229,12 @@ async def predire_fichier(fichier: UploadFile = File(...)):
     - transactions : customer_id, invoice, invoice_date, quantity, price [, stock_code]
     """
     contenu = await fichier.read()
+    if len(contenu) > TAILLE_MAX_CSV:
+        raise HTTPException(
+            413,
+            f"Fichier trop volumineux ({len(contenu) / 1024 / 1024:.1f} Mo). "
+            f"Maximum accepte : {TAILLE_MAX_CSV // 1024 // 1024} Mo.",
+        )
     from io import BytesIO
 
     try:
