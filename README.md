@@ -4,6 +4,7 @@
 le lien important 
 https://dashbord-segmentation.onrender.com/  pour tableau de bord
 https://tp-data-p5p3.onrender.com/   pour test notre modele avec des jeu de donnees
+https://github.com/jerome-byte/TP_data
 
 ## Le contexte
 
