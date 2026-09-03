@@ -71,7 +71,7 @@ const REAL_SEGMENTS: Segment[] = [
   },
   {
     id: 1,
-    nom: "Clients réguliers",
+    nom: "Clients à risque",
     effectif: 1455,
     pctClients: 24.9,
     pctCA: 16.9,
@@ -85,7 +85,7 @@ const REAL_SEGMENTS: Segment[] = [
   },
   {
     id: 2,
-    nom: "Clients à risque",
+    nom: " Clients réguliers",
     effectif: 1246,
     pctClients: 21.3,
     pctCA: 6.1,
